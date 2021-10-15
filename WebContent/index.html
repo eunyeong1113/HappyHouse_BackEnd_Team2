@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko-kr">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HappyHouse</title>
+
+    <!-- 부트스트랩 사용하기 위함 -->
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Pacifico&display=swap"
+      rel="stylesheet"
+    />
+    <!-- 아이콘 사용하기 위함 -->
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+    <link rel="shortcut icon" href="img/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.7.0/css/all.css"
+      integrity="sha384-lZN37f5QGtY3VHgisS14W3ExzMWZxybE1SJSEsQp9S+oqd12jhcu+A56Ebc1zFSJ"
+      crossorigin="anonymous"
+    />
+    <script
+      type="text/javascript"
+      src="//dapi.kakao.com/v2/maps/sdk.js?appkey=45c68664b414c9ffe8b8f1cd18dec311"
+    ></script>
+    <script type="text/javascript">
+      var map, marker;
+      $(document).ready(function () {
+        // 초기 kakao map 설정 start
+        var container = document.getElementById("map"); //지도를 담을 영역의 DOM 레퍼런스
+        // var lat = 37.5012743;
+        // var lng = 127.039585;
+        var locPosition = new kakao.maps.LatLng(37.5012743, 127.039585); // (멀티캠퍼스)
+        var options = {
+          //지도를 생성할 때 필요한 기본 옵션
+          center: locPosition, //지도의 중심좌표.
+          level: 3, //지도의 레벨(확대, 축소 정도)
+        };
+
+        map = new kakao.maps.Map(container, options); //지도 생성 및 객체 리턴
+
+        // HTML5의 geolocation으로 사용할 수 있는지 확인합니다
+        if (navigator.geolocation) {
+          // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+          navigator.geolocation.getCurrentPosition(function (position) {
+            var lat = position.coords.latitude, // 위도
+              lon = position.coords.longitude; // 경도
+
+            locPosition = new kakao.maps.LatLng(lat, lon); // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+            var message = '<div style="padding:5px;">현재위치인가요?!</div>'; // 인포윈도우에 표시될 내용입니다
+
+            // 마커와 인포윈도우를 표시합니다
+            displayMarker(locPosition, message);
+          });
+        } else {
+          // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+
+          locPosition = new kakao.maps.LatLng(33.450701, 126.570667);
+          var message = "geolocation을 사용할수 없어요..";
+
+          displayMarker(locPosition, message);
+        }
+        // 초기 kakao map 설정 end
+
+        // 시군구
+        var cafeArea = {
+          서울: ["강남구", "종로구"],
+          대전: ["대덕구", "동구"],
+          부산: ["강서구", "금정구"],
+        };
+
+        // 동
+        var dongArea = {
+          강남구: ["개포3동"],
+          종로구: ["사직동"],
+          대덕구: ["회덕2동"],
+          동구: ["개포3동"],
+          강서구: ["대저1동"],
+          금정구: ["구서1동"],
+        };
+
+        var officePosition = {
+          역삼점: { lat: 37.500613, lng: 127.036431 },
+          선릉점: { lat: 37.504268, lng: 127.048188 },
+          학하점: { lat: 36.35536, lng: 127.298294 },
+          봉명점: { lat: 36.358843, lng: 127.344192 },
+          연수원점: { lat: 36.098594, lng: 128.38977 },
+          구미사업장: { lat: 36.109553, lng: 128.415011 },
+          하남산단점: { lat: 35.204279, lng: 126.807198 },
+          광주역점: { lat: 35.165476, lng: 126.909216 },
+          부산사업장점: { lat: 35.095765, lng: 128.856344 },
+          녹산산단점: { lat: 35.093641, lng: 128.855679 },
+        };
+
+        var officeAddress = {
+          역삼점: "서울특별시+강남구+역삼동+테헤란로+212",
+          선릉점: "서울특별시 강남구 역삼동 테헤란로 334 LG 화재빌딩",
+          학하점: "대전광역시 유성구 덕명동 124",
+          봉명점: "대전광역시 유성구 봉명동 대학로 60 봉명가든 6층",
+          연수원점: "경상북도 구미시 공단동 259",
+          구미사업장: "경상북도 구미시 임수동 94",
+          하남산단점: "107 하남산단6번로 광산구 광주광역시",
+          광주역점: "광주광역시 북구 중흥동 611",
+          부산사업장점: "부산광역시 강서구 송정동 녹산산업중로 삼성전기 부산사업장사",
+          녹산산단점: "부산광역시 강서구 송정동 삼성전기부속의원",
+        };
+
+        $(".dropdown-item.area").click(function () {
+          var selArea = $(this).text();
+          $("#searchByBtn").text(selArea);
+        });
+
+        $(".dropdown-item.cafe_area").click(function () {
+          var selArea2 = $(this).text();
+          $("#areaBtn1").text(selArea2);
+
+          var areas = cafeArea[selArea2];
+          var a1 = [];
+          $("#office_div").empty();
+          $.each(areas, function (i, a) {
+            $("#office_div").append('<label class="dropdown-item cafe_office">' + a + "</label>");
+          });
+        });
+
+        //officePosition의 lat, lng를 이용한 marker
+        $(document).on("click", ".dropdown-item.cafe_office", function () {
+          var selOffice = $(this).text();
+          $("#officeBtn").text(selOffice);
+          var office = officePosition[selOffice];
+
+          // 이동할 위도 경도 위치를 생성합니다
+          var moveLatLon = new kakao.maps.LatLng(office.lat, office.lng);
+          var message = `<div style="padding:5px;">${selOffice}</div>`;
+
+          // 지도 중심을 부드럽게 이동시킵니다
+          // 만약 이동할 거리가 지도 화면보다 크면 부드러운 효과 없이 이동합니다
+          map.panTo(moveLatLon);
+
+          displayMarker(moveLatLon, message);
+        });
+
+        // 동별 아파트별 검색
+        $("#searchBtn").on("click", function () {
+          var selectedSearch = $("#searchByBtn").text().trim();
+          console.log(selectedSearch);
+          if (selectedSearch == "동별검색") {
+            location.href = "searchByD.html";
+          } else if (selectedSearch == "아파트별검색") {
+            location.href = "searchByApt.html";
+          } else {
+            alert("검색 방법을 선택하세요");
+          }
+        });
+      });
+
+      function displayMarker(locPosition, message) {
+        if (marker) marker.setMap(null); // 기존 maker 제거
+
+        var imageSrc = "img/my_position.png", // 마커이미지의 주소입니다
+          imageSize = new kakao.maps.Size(50, 70), // 마커이미지의 크기입니다
+          imageOption = { offset: new kakao.maps.Point(27, 69) }; // 마커이미지의 옵션입니다. 마커의 좌표와 일치시킬 이미지 안에서의 좌표를 설정합니다.
+
+        // 마커의 이미지정보를 가지고 있는 마커이미지를 생성합니다
+        var markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize, imageOption);
+
+        // 마커를 생성합니다
+        marker = new kakao.maps.Marker({
+          map: map,
+          position: locPosition,
+          image: markerImage,
+        });
+
+        var iwContent = message, // 인포윈도우에 표시할 내용
+          iwRemoveable = true;
+
+        // 인포윈도우를 생성합니다
+        var infowindow = new kakao.maps.InfoWindow({
+          content: iwContent,
+          removable: iwRemoveable,
+        });
+
+        // 인포윈도우를 마커위에 표시합니다
+        infowindow.open(map, marker);
+
+        // 지도 중심좌표를 접속위치로 변경합니다
+        map.setCenter(locPosition);
+      }
+    </script>
+    <style>
+      @import url(http://fonts.googleapis.com/earlyaccess/nanumgothic.css);
+
+      ul.nav {
+        background-color: rgba(201, 201, 201, 0.5);
+        padding: 10px;
+        border-radius: 10px;
+      }
+      footer {
+        font-family: "Nanum Gothic", sans-serif;
+        text-align: center;
+        background-color: rgba(125, 111, 111, 0.5);
+      }
+      .carousel-inner img {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+    <script>
+      $(function () {
+        $("div#signinButtons button:first").click(function () {
+          var myid = $("#id").val();
+          var mypw = $("#pw").val();
+          var myname = $("#name").val();
+          var myphone = $("#phone").val();
+          var myemail = $("#email").val();
+
+          if (myid == null) {
+            alert("아이디를 입력해 주세요!");
+            return;
+          }
+          if (mypw == null) {
+            alert("패스워드를 입력해 주세요!");
+            return;
+          }
+          if (myname == null) {
+            alert("이름을 입력해 주세요!");
+            return;
+          }
+          if (myphone == null) {
+            alert("전화번호를 입력해 주세요!");
+            return;
+          }
+          if (myemail == null) {
+            alert("이메일을 입력해 주세요!");
+            return;
+          }
+          alert("회원가입이 완료되었습니다!");
+        });
+
+        $("#login").click(function () {
+          var id = $("#ID").val();
+          var pw = $("#PW").val();
+
+          if (id == null) {
+            alert("아이디를 입력해주세요!");
+            return;
+          }
+          if (pw == null) {
+            alert("비밀번호를 입력해주세요");
+            return;
+          }
+          alert("로그인 완료!");
+
+          $("#showInfo").show();
+          $("#editInfo").show();
+          $("#disjoin").show();
+          $("#afterLogin").show();
+          $("#logoutForm").show();
+          $("#pinnedArea").show();
+
+          $("#loginForm").hide();
+          $("#signin").hide();
+        });
+
+        $("#logout").click(function () {
+          alert("정상적으로 로그아웃 되었습니다.");
+
+          $("#logoutForm").hide();
+          $("#showInfo").hide();
+          $("#editInfo").hide();
+          $("#disjoin").hide();
+          $("#pinnedArea").hide();
+
+          $("#loginForm").show();
+          $("#signin").show();
+          
+          $("#ID").val("");
+          $("#PW").val("");
+        });
+
+        $("#showInfo").click(function () {
+          open("showInfoPopup.html", "showInfo", "width=400px, height=500px, scrollbars=yes");
+        });
+
+        $("#editInfo").click(function () {
+          open("editInfoPopup.html", "showInfo", "width=400px, height=500px, scrollbars=yes");
+        });
+
+        $("#disjoin").click(function () {
+          if (confirm("탈퇴하시겠습니까?")) {
+            alert("탈퇴 되셨습니다.");
+            $("#showInfo").hide();
+            $("#editInfo").hide();
+            $("#disjoin").hide();
+            $("#afterLogin").hide();
+            $("#logoutForm").hide();
+            $("#pinnedArea").hide();
+            
+            $("#loginForm").show();
+            $("#signin").show();
+            
+            $("#ID").val("");
+            $("#PW").val("");
+            
+          } else {
+            alert("취소하셨습니다.");
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <!-- 1. header: navi bar -->
+    <div>
+      <header>
+        <!-- nav bar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="margin: 24px 0">
+          <a class="navbar-brand" href="#">Happy House</a>
+
+          <button
+            class="navbar-toggler navbar-toggler-right"
+            type="button"
+            data-toggle="collapse"
+            data-target="#navb"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navb">
+            <ul class="navbar-nav mr-auto">
+              <li class="nav-item"><a class="nav-link" href="#">공지사항</a></li>
+              <li class="nav-item"><a class="nav-link" href="#">오늘의 뉴스</a></li>
+              <li class="nav-item"><a class="nav-link" href="#">주변 탐방</a></li>
+            </ul>
+
+            <form id="loginForm" class="form-inline my-2 my-lg-0">
+              <input class="form-control mr-sm-2" type="text" id="ID" placeholder="Enter ID" />
+              <input
+                class="form-control mr-sm-2"
+                type="password"
+                id="PW"
+                placeholder="Enter Password"
+              />
+              <button class="btn btn-success" type="button" id="login">Login</button>
+            </form>
+
+            <ul class="navbar-nav mr-auto" id="pinnedArea" style="display: none">
+              <li class="nav-item"><a class="nav-link">관심지역 추가와 관심지역</a></li>
+            </ul>
+            <ul class="navbar-nav mr-auto" id="showInfo" style="display: none">
+              <li class="nav-item"><a class="nav-link">회원 정보 조회</a></li>
+            </ul>
+            <ul class="navbar-nav mr-auto" id="editInfo" style="display: none">
+              <li class="nav-item"><a class="nav-link">회원 정보 수정</a></li>
+            </ul>
+            <ul class="navbar-nav mr-auto" id="disjoin" style="display: none">
+              <li class="nav-item"><a class="nav-link">회원 탈퇴</a></li>
+            </ul>
+
+            <button
+              class="btn btn-primary"
+              type="button"
+              data-toggle="modal"
+              data-target="#signinModal"
+              id="signin"
+            >
+              Sign in
+            </button>
+
+            <!--  추가로 nav 만들기 회원 정보 조회, 수정, 탈퇴-->
+
+            <form id="logoutForm" class="form-inline my-2 my-lg-0" style="display: none">
+              <button class="btn btn-success my-2 my-sm-0" type="button" id="logout">Logout</button>
+            </form>
+
+            <!-- <form class="form-inline my-2 my-lg-0">
+					<input class="form-control mr-sm-2" type="search" placeholder="Search">
+					<button class="btn btn-success my-2 my-sm-0" type="button">Search</button>
+				</form>  -->
+          </div>
+        </nav>
+      </header>
+    </div>
+
+    <!--  sign in modal -->
+    <div class="modal" id="signinModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">회원가입</h4>
+          </div>
+
+          <!-- Modal body -->
+          <div class="modal-body">
+            아이디
+            <input type="text" name="id" id="id" placeholder="영문으로 4자리 이상" /><br /><br />
+            비밀번호
+            <input
+              type="password"
+              name="pw"
+              id="pw"
+              placeholder="영문 숫자 포함 6자리 이상"
+            /><br /><br />
+            이름 <input type="text" name="name" id="id" placeholder="User Name" /><br /><br />
+            전화번호
+            <input type="tel" name="phone" id="phone" placeholder="Phone Number" /><br /><br />
+            이메일 <input type="email" name="email" id="email" placeholder="E-mail" /><br /><br />
+          </div>
+
+          <!-- Modal footer -->
+          <div class="modal-footer" id="signinButtons">
+            <button type="button" class="btn btn-success" data-dismiss="modal">등록</button>
+            <button type="button" class="btn btn-danger" data-dismiss="modal">닫기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- body 전체를 div가 감싸고 있다. -->
+    <!-- container는 양쪽에 공간을 조금 둔다 (fluid는 꽉 차게 한다) -->
+    <!-- 2. body -->
+
+    <!-- banner start -->
+    <div
+      class="banner dark-translucent-bg"
+      style="background-image: url('house.jpg'); background-position: 50% 55%"
+    >
+      <!-- breadcrumb end -->
+      <div class="container">
+        <div class="row justify-content-lg-center">
+          <div class="col-lg-8 text-center pv-20">
+            <h2
+              class="title hc-element-invisible"
+              data-animation-effect="fadeIn"
+              data-effect-delay="100"
+              style="text-align: center"
+            >
+              <strong>Happy House</strong>
+            </h2>
+            <div
+              class="separator hc-element-invisible mt-10"
+              data-animation-effect="fadeIn"
+              data-effect-delay="100"
+            ></div>
+            <p
+              class="text-center hc-element-invisible"
+              data-animation-effect="fadeIn"
+              data-effect-delay="100"
+              style="text-align: center"
+            >
+              Welcome to our website!
+            </p>
+          </div>
+        </div>
+      </div>
+      <br /><br /><br /><br /><br /><br /><br />
+    </div>
+    <!-- banner end -->
+
+    <div class="container">
+      <!-- Kakao Map start -->
+      <!-- 지도 버튼 시작 -->
+      <div class="text-center mb-2">
+        <div class="dropdown">
+          <div class="btn-group">
+            <button
+              type="button"
+              id="searchByBtn"
+              class="btn btn-warning dropdown-toggle dropdown-toggle-split"
+              data-toggle="dropdown"
+            >
+              검색방법
+            </button>
+            <div class="dropdown-menu">
+              <label class="dropdown-item area">동별검색</label>
+              <label class="dropdown-item area">아파트별검색</label>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button
+              type="button"
+              id="areaBtn1"
+              class="btn btn-warning dropdown-toggle dropdown-toggle-split"
+              data-toggle="dropdown"
+            >
+              도/광역시
+            </button>
+            <div id="do" class="dropdown-menu">
+              <label class="dropdown-item cafe_area">서울</label>
+              <label class="dropdown-item cafe_area">대전</label>
+              <label class="dropdown-item cafe_area">부산</label>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button
+              type="button"
+              id="officeBtn"
+              class="btn btn-warning dropdown-toggle dropdown-toggle-split"
+              data-toggle="dropdown"
+            >
+              시/구/군
+            </button>
+            <div id="office_div" class="dropdown-menu"></div>
+          </div>
+          <button type="button" id="searchBtn" class="btn">
+            <i class="fa fa-search"></i>
+          </button>
+        </div>
+      </div>
+      <div id="map" style="width: 100%; height: 300px; margin: auto" class="mb-3"></div>
+      <!-- Kakao Map end -->
+
+	
+	<div class="container-fluid">
+    <div class="row">
+    <div class="col-lg-3" style="border:2px solid purple; background:lavender">
+     <h3>CS 공부, 려니쌤과 함께라면 문제없어!</h3>
+     <img src="studying.jpg" width="150" height="150">
+     <button>사이트 이동!</button>
+    </div>
+    
+    <div class="col-lg-5">
+    <h3>공지사항</h3>
+    <hr>
+    <ul>
+	    <li> 서비스 이용 약관 변경</li><br>
+	    <li> 추석 맞이 이벤트!</li><br>
+	    <li> 고객 등급별 혜택 안내</li><br>
+    	<li> 홈페이지가 새단장 했어요!</li><br>
+    </ul>
+    </div>
+    
+    <div class="col-lg-4" >
+    <h3>오늘의 뉴스</h3>
+    <hr>
+    <h5>서울 아파트, 매매&전세 다른 양상보여.. (아시아경제)</h5>
+    <ul>
+    <li>서울 입주 2년차 아파트 전셋값 1억 4000만원 올라 (한겨레)</li>
+    <li>재건축 대안 뜨는 수직증축 리모델링, 추진 속전속결 (동아일보)</li>
+    <li>고가기준 9억, 서울 아파트 중간값 됐다 (아시아경제)</li>
+    
+    </ul>
+    </div>
+
+  </div>
+  </div>	
+
+
+	<div class="container mt-3">
+	  <div class="row">
+	  
+	  	<div class="col-lg-2">
+	  	<img src="logo.jpg" width="150" height="100">
+	  	</div>
+	    <div class="col-lg-6">
+	    <h4>Find us</h4>
+	    <hr>
+	    <ul>
+	    <li>Address : 서울시 강남구 역삼동 멀티캠퍼스</li>
+	    <li>Tel : 070 - 1234 - 5678</li>
+	    <li>twoRyn@ssafy.com</li>
+	    </ul>
+	    </div>
+
+	  </div>
+	</div>
+
+    <!-- 3. footer -->
+    <div>
+      <footer class="container mt-4">
+        <p>Copyright by Ryn&Su. All right reserved.</p>
+        <p></p>
+      </footer>
+    </div>
+  </body>
+</html>
+

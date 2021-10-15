@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>회원 정보 수정</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script>
+  $(function(){
+	  
+	  $("button:first").click(function(){
+		  alert("수정 완료!");
+		  self.close();
+	  })
+	  
+	  $("button:last").click(function(){
+		  self.close();
+	  })
+  })
+  </script>
+</head>
+<body>
+<div class="container">
+<h3>회원 정보 수정</h3><br>
+<table class="table table-striped mt-3">
+    <tbody>
+      <tr>
+        <th>아이디</t>
+        <td><input type="text" name="id" id="id" placeholder="영문으로 4자리 이상" /></td>
+      </tr>
+      <tr>
+		<th>비밀번호</t>
+        <td> <input
+     type="password"
+     name="pw"
+     id="pw"
+     placeholder="영문 숫자 포함 6자리 이상"
+   /></td>
+      </tr>
+      <tr>
+         <th>이름</t>
+        <td><input type="text" name="name" id="id" placeholder="User Name" /></td>
+      </tr>
+      <tr>
+         <th>전화번호</t>
+        <td><input type="tel" name="phone" id="phone" placeholder="Phone Number" /></td>
+      </tr>
+      <tr>
+         <th>이메일</t>
+        <td><input type="email" name="email" id="email" placeholder="E-mail" /></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<button class="mt-2 ml-5">저장</button>
+<button class="mt-2 ml-2">닫기</button>
+
+</body>
+</html>
